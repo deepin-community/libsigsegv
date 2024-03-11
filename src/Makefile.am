@@ -1,10 +1,10 @@
 ## Makefile for libsigsegv/src.
-## Copyright (C) 2002-2006, 2008-2011, 2016-2018, 2021 Bruno Haible <bruno@clisp.org>
+## Copyright (C) 2002-2006, 2008-2011, 2016-2018, 2021-2022 Bruno Haible <bruno@clisp.org>
 ##
-## This program is free software; you can redistribute it and/or modify
+## This program is free software: you can redistribute it and/or modify
 ## it under the terms of the GNU General Public License as published by
-## the Free Software Foundation; either version 2, or (at your option)
-## any later version.
+## the Free Software Foundation; either version 2 of the License, or
+## (at your option) any later version.
 ##
 ## This program is distributed in the hope that it will be useful,
 ## but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -12,9 +12,7 @@
 ## GNU General Public License for more details.
 ##
 ## You should have received a copy of the GNU General Public License
-## along with this program; if not, write to the Free Software
-## Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301,
-## USA.
+## along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 ## Process this file with automake to produce Makefile.in.
 
@@ -27,7 +25,7 @@ lib_LTLIBRARIES = libsigsegv.la
 noinst_HEADERS = \
   fault.h fault-aix3.h fault-aix3-powerpc.h fault-aix5.h fault-aix5-powerpc.h \
   fault-beos.h fault-beos-i386.h \
-  fault-cygwin-old.h \
+  fault-cygwin.h fault-cygwin-i386.h fault-cygwin-old.h \
   fault-bsd.h \
   fault-freebsd-arm.h \
   fault-freebsd-i386.h \
@@ -41,6 +39,7 @@ noinst_HEADERS = \
   fault-linux-hppa.h fault-linux-hppa-old.h \
   fault-linux-i386.h fault-linux-i386-old.h fault-linux-i386-oldold.h \
   fault-linux-ia64.h fault-linux-ia64-old.h \
+  fault-linux-loongarch.h \
   fault-linux-m68k.h fault-linux-m68k-old.h fault-linux-m68k-old.c \
   fault-linux-mips.h fault-linux-mips-old.h \
   fault-linux-nds32.h \
@@ -50,7 +49,8 @@ noinst_HEADERS = \
   fault-linux-sh.h fault-linux-sh-old.h \
   fault-linux-sparc.h fault-linux-sparc-old.h \
   fault-linux-x86_64-old.h \
-  fault-macos-i386.h \
+  fault-macos.h fault-macos-arm64.h fault-macos-i386.h fault-macos-powerpc.h \
+  fault-macos-i386-old.h \
   fault-macosdarwin5-powerpc.h fault-macosdarwin5-powerpc.c \
   fault-macosdarwin7-powerpc.h fault-macosdarwin7-powerpc.c \
   fault-netbsd.h fault-netbsd-alpha.h fault-netbsd-alpha.c \
@@ -70,10 +70,10 @@ noinst_HEADERS = \
 EXTRA_DIST = \
   handler-none.c handler-unix.c handler-macos.c handler-win32.c \
   stackvma-none.c stackvma-simple.c stackvma-linux.c stackvma-freebsd.c \
-  stackvma-netbsd.c stackvma-procfs.c stackvma-beos.c stackvma-mach.c \
-  stackvma-mquery.c stackvma-mincore.c stackvma-rofile.c stackvma-vma-iter.c \
-  leave-none.c leave-nop.c leave-sigaltstack.c leave-setcontext.c \
-  sigsegv.h.msvc
+  stackvma-netbsd.c stackvma-aix.c stackvma-procfs.c stackvma-cygwin.c \
+  stackvma-beos.c stackvma-mach.c stackvma-mquery.c \
+  stackvma-mincore.c stackvma-rofile.c stackvma-vma-iter.c \
+  leave-none.c leave-nop.c leave-sigaltstack.c leave-setcontext.c
 
 AM_CPPFLAGS = -I. -I$(srcdir)
 DEFS = @DEFS@
@@ -87,7 +87,7 @@ libsigsegv_la_LDFLAGS = \
 
 # Before making a release, change this according to the libtool documentation,
 # section "Library interface versions".
-LIBSIGSEGV_VERSION_INFO = 2:6:0
+LIBSIGSEGV_VERSION_INFO = 2:7:0
 
 # Dependencies.
 handler.$(OBJEXT) : ../config.h sigsegv.h @CFG_HANDLER@ $(noinst_HEADERS) 
@@ -110,14 +110,3 @@ uninstall-local:
 
 
 DISTCLEANFILES = sigsegv.h
-
-
-# Rules for "make dist".
-
-sigsegv.h.msvc : sigsegv.h.in
-	sed -e 's/@''FAULT_CONTEXT_INCLUDE''@/#include <windows.h>/' \
-	    -e 's/@''FAULT_CONTEXT''@/CONTEXT/' \
-	    -e 's/@''HAVE_SIGSEGV_RECOVERY''@/1/' \
-	    -e 's/@''HAVE_STACK_OVERFLOW_RECOVERY''@/1/' \
-	    < $(srcdir)/sigsegv.h.in > $@
-
