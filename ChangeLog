@@ -1,3 +1,489 @@
+2025-04-28  Bruno Haible  <bruno@clisp.org>
+
+	Prepare for version 2.15.
+	* configure.ac (AC_INIT): Bump version to 2.15.
+	* src/sigsegv.h.in (LIBSIGSEGV_VERSION): Likewise.
+	* README: Likewise.
+	* src/Makefile.am (LIBSIGSEGV_VERSION_INFO): Bump to 2:8:0.
+	* NEWS: Update.
+
+2025-04-28  Bruno Haible  <bruno@clisp.org>
+
+	Fix compilation error on Mac OS X 10.4/powerpc.
+	Patch by Evan Miller <emmiller@gmail.com> in
+	<https://lists.gnu.org/archive/html/bug-gnulib/2021-08/msg00153.html>.
+	* src/fault-macos-powerpc.h (SIGSEGV_FAULT_STACKPOINTER): On Mac OS X
+	<= 10.4, assume struct field names without underscores.
+
+2025-04-16  Bruno Haible  <bruno@clisp.org>
+
+	Update after gnulib changed.
+	* gitsub.sh: Update from gnulib.
+
+2024-11-27  Bruno Haible  <bruno@clisp.org>
+
+	Add installation information for the tarball users and from a git checkout.
+	* autogen.sh: Import INSTALL.generic from gnulib.
+	* INSTALL: Entirely rewritten, based on poke/INSTALL.
+	* Makefile.am (EXTRA_DIST): Add INSTALL.generic.
+
+2024-11-27  Bruno Haible  <bruno@clisp.org>
+
+	Distribute DEPENDENCIES.
+	* Makefile.am (EXTRA_DIST): Add DEPENDENCIES.
+
+2024-11-22  Bruno Haible  <bruno@clisp.org>
+
+	Switch to libtool 2.5.4.
+	* m4/libtool.m4: Update from libtool-2.5.4.
+	* m4/ltversion.m4: Likewise.
+	* build-aux/ltmain.sh: Likewise.
+
+2024-11-07  Bruno Haible  <bruno@clisp.org>
+
+	Update the GPL text.
+	* COPYING: Update from <https://ftp.gnu.org/gnu/Licenses/gpl-2.0.txt>.
+
+2024-09-26  Bruno Haible  <bruno@clisp.org>
+
+	Switch to libtool 2.5.3.
+	* m4/libtool.m4: Update from libtool-2.5.3.
+	* m4/ltoptions.m4: Likewise.
+	* m4/ltsugar.m4: Likewise.
+	* m4/ltversion.m4: Likewise.
+	* m4/lt~obsolete.m4: Likewise.
+	* build-aux/ltmain.sh: Likewise.
+
+2024-09-21  Bruno Haible  <bruno@clisp.org>
+
+	Avoid test failure with gcc 14.
+	Patch by Paul Eggert.
+	* tests/test-catch-stackoverflow2.c (null_pointer): Make it a
+	volatile pointer, not a pointer to volatile. Also, rename from
+	null_pointer_to_volatile_int.
+	(main): Update.
+
+2024-08-30  Bruno Haible  <bruno@clisp.org>
+
+	Clarify license of the *.m4 files.
+	* m4/*.m4: In the license notice, clarify which version of the GPL
+	is meant.
+
+2024-08-24  Bruno Haible  <bruno@clisp.org>
+
+	Fix shared library support in 32-bit mode on FreeBSD/powerpc64.
+	Patch from <https://savannah.gnu.org/patch/index.php?10469>.
+	* m4/libtool.m4: On FreeBSD, fix shlibpath_var.
+
+2024-07-12  Bruno Haible  <bruno@clisp.org>
+
+	Switch to autoconf 2.72, automake 1.17.
+	* autogen.sh: Update comment.
+
+2024-06-20  Paul Eggert  <eggert@cs.ucla.edu>
+
+	avoid unlikely undefined behavior
+	Problem found by Coverity for diffutils and reported by Wasser Mai in:
+	https://bugs.gnu.org/71535
+	* src/stackvma-rofile.c (rof_open) [__linux__ || __FreeBSD__ || etc]:
+	Don’t assume result of ‘read’ fits in int.
+	Avoid undefined behavior if ‘n + MIN_LEFTOVER’ would overflow.
+	Also, move a test to be after an (n == 0) test, to help the compiler.
+
+2024-06-12  Bruno Haible  <bruno@clisp.org>
+
+	Update HACKING.
+	* HACKING: Mention the multi-platform continuous integration.
+
+2024-05-08  Bruno Haible  <bruno@clisp.org>
+
+	Avoid test failures with ASAN.
+	* tests/test-catch-stackoverflow1.c (HAVE_STACK_OVERFLOW_RECOVERY):
+	Undefine if ASAN is enabled.
+	* tests/test-catch-stackoverflow2.c (HAVE_STACK_OVERFLOW_RECOVERY):
+	Likewise.
+
+2024-04-04  Bruno Haible  <bruno@clisp.org>
+
+	Fix macro file 'serial' numbers for 'aclocal --install'.
+	* m4/bold.m4: Make 'serial' effective.
+	* m4/efault.m4: Likewise.
+	* m4/fault.m4: Likewise.
+	* m4/getpagesize.m4: Likewise.
+	* m4/mmap-anon.m4: Likewise.
+	* m4/sigaltstack-longjmp.m4: Likewise.
+	* m4/sigaltstack-siglongjmp.m4: Likewise.
+
+2023-11-09  Bruno Haible  <bruno@clisp.org>
+
+	Port to CHERI.
+	* m4/fault.m4 (SV_TRY_FAULT): Use 'uintptr_t' instead of
+	'unsigned long'.
+	* src/signals-bsd.h (SIGSEGV_FOR_ALL_SIGNALS): On CheriBSD, treat
+	SIGPROT like SIGSEGV and SIGBUS.
+	* src/fault-freebsd-arm.h (SIGSEGV_FAULT_STACKPOINTER): Define
+	differently on CheriBSD.
+
+2023-10-15  Bruno Haible  <bruno@clisp.org>
+
+	Fix compilation error on FreeBSD 5.2.1.
+	* src/stackvma-freebsd.c: Include <sys/param.h>.
+
+2023-09-18  Bruno Haible  <bruno@clisp.org>
+
+	Fix shared library support on Android.
+	Patch from <https://savannah.gnu.org/patch/index.php?10393>.
+	* m4/libtool.m4: On Android, fix library_names_spec and
+	hardcode_libdir_flag_spec.
+
+2023-08-30  Bruno Haible  <bruno@clisp.org>
+
+	Recognize the *-*-windows* config triplets introduced on 2023-06-26.
+	* configure.ac: Treat windows* as equivalent to mingw*.
+	* m4/efault.m4 (SV_SYSCALLS_EFAULT): Likewise.
+
+2023-06-29  Bruno Haible  <bruno@clisp.org>
+
+	Update the installation instructions for Windows.
+	* INSTALL.windows: Add a note about MSYS2.
+
+2023-06-29  Bruno Haible  <bruno@clisp.org>
+
+	Make the autoconf tests more robust.
+	Triggered by
+	https://gitlab.com/redhat/centos-stream/rpms/libsigsegv/-/blob/c9s/configure.patch
+	from Petr Šabata <contyk@redhat.com>.
+	* m4/fault.m4 (SV_TRY_FAULT): Mark the variables that are accessed by
+	the signal handler as 'volatile'.
+
+2023-05-21  Bruno Haible  <bruno@clisp.org>
+
+	Support creating shared libraries on Hurd/x86_64.
+	Patch from
+	<https://lists.gnu.org/archive/html/bug-hurd/2023-05/msg00086.html>.
+	* m4/libtool.m4 (_LT_ENABLE_LOCK): Treat Hurd/x86_64 like
+	Linux/x86_64.
+
+2023-05-15  Bruno Haible  <bruno@clisp.org>
+
+	Add support for Hurd through the POSIX API.
+	Suggested by Sergey Bugaev <bugaevc@gmail.com>.
+	* src/fault-hurd-i386-old.h: Renamed from src/fault-hurd-i386.h.
+	* src/fault-hurd-i386.h: New file, based on src/fault-hurd-i386-old.h.
+	* src/Makefile.am (noinst_HEADERS): Add fault-hurd-i386-old.h.
+	* configure.ac (CFG_FAULT): Use fault-hurd-i386.h or
+	fault-posix-ucontext.h when the POSIX API works on Hurd.
+
+2023-05-14  Bruno Haible  <bruno@clisp.org>
+
+	Tentative support for Hurd/x86_64.
+	Reported by Sergey Bugaev <bugaevc@gmail.com>.
+	* src/fault-hurd.h (SIGSEGV_FAULT_HANDLER_ARGLIST): Change type of
+	second parameter.
+
+2023-05-14  Bruno Haible  <bruno@clisp.org>
+
+	Fix comments.
+	* src/fault-hurd-i386.h: Fix comments, based on info by Sergey Bugaev in
+	<https://lists.gnu.org/archive/html/bug-hurd/2023-05/msg00210.html>.
+
+2023-05-12  Bruno Haible  <bruno@clisp.org>
+
+	Tentative support for Hurd/x86_64.
+	Reported by Samuel Thibault <samuel.thibault@ens-lyon.org>.
+	* src/fault-hurd-i386.h: Add support for x86_64 CPU.
+	* configure.ac (CFG_FAULT): Use fault-hurd-i386.h also on x86_64.
+
+2023-02-26  Bruno Haible  <bruno@clisp.org>
+
+	Modernize handling of m4 macro dirs.
+	* configure.ac (AC_CONFIG_MACRO_DIRS): Specify the m4 macro dirs here.
+	* Makefile.am (ACLOCAL_AMFLAGS): ... not here.
+	* autogen.sh: Update comments.
+
+2023-02-11  Bruno Haible  <bruno@clisp.org>
+
+	Don't let configure tests fail due to the picky clang 16 compiler.
+	clang 16 will report an error for -Wincompatible-function-pointer-types
+	by default.
+	Reported by Sam James <sam@gentoo.org> in
+	<https://savannah.gnu.org/bugs/index.php?63788>.
+	* configure.ac (MacOSX/Darwin7 PowerPC): Add a cast when assigning to
+	action.sa_sigaction.
+
+2023-02-11  Bruno Haible  <bruno@clisp.org>
+
+	Add support for clang 16 on OpenBSD and Mac OS X 10/PowerPC.
+	clang 16 will report an error for -Wincompatible-function-pointer-types
+	by default.
+	* src/handler-unix.c (install_for): Add a cast when assigning to
+	action.sa_sigaction.
+
+2023-01-04  Bruno Haible  <bruno@clisp.org>
+
+	Add support for macOS/x86_64 with clang 15.
+	Reported at <https://savannah.gnu.org/bugs/?63617>.
+	* src/handler-macos.c (sigsegv_leave_handler): Add a cast, to silence a
+	warning that became an error in clang 15.
+	* NEWS: Mention it.
+
+2022-07-18  Bruno Haible  <bruno@clisp.org>
+
+	Make autopull.sh more suited for continuous integration.
+	* autopull.sh: Support option --one-time.
+
+2022-07-18  Bruno Haible  <bruno@clisp.org>
+
+	Move gnulib-tool invocation back from autopull.sh to autogen.sh.
+	* autogen.sh: Revert last change. Improve comments.
+	* autopull.sh: Only call 'gitsub.sh pull'.
+
+2022-07-17  Bruno Haible  <bruno@clisp.org>
+
+	Split autogen.sh into autopull.sh and autogen.sh.
+	* autopull.sh: New file, based on autogen.sh.
+	* autogen.sh: Remove code that was moved to autopull.sh. Remove
+	--skip-gnulib option.
+	* HACKING: Mention autopull.sh.
+	* Makefile.am (EXTRA_DIST): Add HACKING, autogen.sh.
+
+2022-07-10  Bruno Haible  <bruno@clisp.org>
+
+	Optimize stackvma implementation for AIX 7.
+	Reported by Neha Jain <nehajain29@in.ibm.com> in
+	<https://lists.gnu.org/archive/html/bug-m4/2022-06/msg00005.html>
+	via Eric Blake.
+	* src/stackvma-aix.c: Add implementation that uses /proc/$pid/map,
+	based on src/stackvma-procfs.h and gnulib/lib/vma-iter.c.
+	(sigsegv_get_vma): Use it on AIX 7 or higher.
+	* configure.ac (CFG_STACKVMA): On AIX, use stackvma-aix.c always.
+	* NEWS: Mention the improvement.
+
+2022-05-22  Bruno Haible  <bruno@clisp.org>
+
+	Add GNU Project notice.
+	* JOIN-GNU: New file. Inspired by a suggestion from José E. Marchesi
+	on the gnu-prog-discuss mailing list.
+	* README: Refer to it.
+	* Makefile.am (EXTRA_DIST): Add it.
+
+2022-05-15  Bruno Haible  <bruno@clisp.org>
+
+	Switch to libtool 2.4.7.
+	* m4/libtool.m4: Update from libtool-2.4.7.
+	* m4/ltoptions.m4: Likewise.
+	* m4/ltsugar.m4: Likewise.
+	* m4/ltversion.m4: Likewise.
+	* m4/lt~obsolete.m4: Likewise.
+	* build-aux/ltmain.sh: Likewise.
+
+2022-03-13  Bruno Haible  <bruno@clisp.org>
+
+	Add support for Linux/PowerPC (32-bit) with musl libc.
+	Reported by Khem Raj <raj.khem@gmail.com> in
+	<https://lists.gnu.org/archive/html/m4-patches/2022-03/msg00000.html>.
+	* autogen.sh: Copy also musl.m4.
+	* configure.ac: Invoke gl_MUSL_LIBC.
+	* src/fault-linux-powerpc.h (SIGSEGV_FAULT_STACKPOINTER): In the 32-bit
+	case, handle musl libc differently.
+	* NEWS: Mention it.
+
+2022-01-07  Bruno Haible  <bruno@clisp.org>
+
+	Prepare for version 2.14.
+	* configure.ac (AC_INIT): Bump version to 2.14.
+	* src/sigsegv.h.in (LIBSIGSEGV_VERSION): Likewise.
+	* README: Likewise.
+	* src/Makefile.am (LIBSIGSEGV_VERSION_INFO): Bump to 2:7:0.
+
+2022-01-07  Bruno Haible  <bruno@clisp.org>
+
+	Improve support for Linux/LoongArch64.
+	* src/fault-linux-loongarch.h: New file.
+	* src/Makefile.am (noinst_HEADERS): Add it.
+	* configure.ac (CFG_FAULT): Use this file on Linux/LoongArch64.
+	* NEWS: Mention it.
+
+2021-09-13  Bruno Haible  <bruno@clisp.org>
+
+	Improve support for OpenBSD/PowerPC64.
+	Based on a patch by Christian Weisgerber <naddy@mips.inka.de> at
+	<https://lists.gnu.org/archive/html/bug-gnulib/2021-09/msg00045.html>.
+	* src/fault-openbsd-powerpc.h (SIGSEGV_FAULT_STACKPOINTER): Define
+	differently in 64-bit mode.
+	* NEWS: Mention it.
+
+2021-08-07  Bruno Haible  <bruno@clisp.org>
+
+	tests: Silence some GCC warnings.
+	Patch by Paul Eggert.
+	* tests/test-catch-segv1.c, tests/test-catch-stackoverflow1.c,
+	tests/test-catch-stackoverflow2.c: Declare some functions and variables
+	static, to pacify GCC when warning about external functions missing
+	declarations.
+
+2021-06-09  Bruno Haible  <bruno@clisp.org>
+
+	tests: Hide a null pointer from the compiler's optimizations.
+	Patch by Paul Eggert.
+	* tests/test-catch-stackoverflow2.c (null_pointer_to_volatile_int): New
+	variable.
+	(main): Use it.
+
+2021-06-06  Bruno Haible  <bruno@clisp.org>
+
+	Avoid a gcc warning "declaration of 'sig' shadows a parameter".
+	Reported by Dmitry V. Levin <ldv@altlinux.org> in
+	<https://lists.gnu.org/archive/html/bug-gnulib/2021-06/msg00018.html>.
+	* src/handler-unix.c (sigsegv_handler): Use a different local variable
+	name than 'sig'.
+
+2021-05-29  Bruno Haible  <bruno@clisp.org>
+
+	Fix typo in comment.
+	* src/stackvma-procfs.c: Fix typo in comment, found by Paul Eggert.
+	* src/stackvma-vma-iter.c: Likewise.
+	* src/stackvma-beos.c: Likewise.
+
+2021-05-16  Bruno Haible  <bruno@clisp.org>
+
+	Avoid compilation error with glibc >= 2.34.
+	* lib/sigsegv.h.in (SIGSTKSZ): On glibc systems, redefine to a suitable
+	constant.
+	* m4/sigaltstack-longjmp.m4 (SV_TRY_LEAVE_HANDLER_LONGJMP): Likewise.
+	* m4/sigaltstack-siglongjmp.m4 (SV_TRY_LEAVE_HANDLER_SIGLONGJMP):
+	Likewise.
+
+2021-05-16  Bruno Haible  <bruno@clisp.org>
+
+	On Cygwin, use the sigaltstack-based approach by default.
+	* src/fault-cygwin.h: New file.
+	* src/fault-cygwin-i386.h: New file.
+	* src/stackvma-cygwin.c: New file, based on src/stackvma-netbsd.c.
+	* src/stackvma-vma-iter.c: Enable /proc-reading code also on Cygwin.
+	* src/Makefile.am (noinst_HEADERS): Add fault-cygwin.h,
+	fault-cygwin-i386.h.
+	(EXTRA_DIST): Add stackvma-cygwin.c.
+	* configure.ac: Use fault-cygwin-i386.h instead of
+	fault-posix-ucontext.h. Add --enable-support-old-cygwin option. When it
+	is not specified, use handler-unix.c and stackvma-cygwin.c
+	* NEWS: Mention that 64-bit Cygwin is now supported.
+
+2021-05-16  Bruno Haible  <bruno@clisp.org>
+
+	Simplify: Use the POSIX API instead of Mach API on newer macOS versions.
+	* src/fault-macos.h: New file.
+	* src/fault-macos-arm64.h: New file.
+	* src/fault-macos-i386.h: New file.
+	* src/fault-macos-powerpc.h: New file.
+	* src/Makefile.am (noinst_HEADERS): Add them.
+	* configure.ac (CFG_FAULT): On macOS 10.13 or newer, use fault-macos*.h
+	and handler-unix.c, instead of handler-macos.c.
+
+2021-05-16  Bruno Haible  <bruno@clisp.org>
+
+	Rename fault-macos-i386.h to fault-macos-i386-old.h.
+	* src/fault-macos-i386-old.h: Renamed from src/fault-macos-i386.h.
+	* configure.ac (CFG_FAULT): Update.
+	* src/Makefile.am (noinst_HEADERS): Likewise.
+
+2021-05-16  Bruno Haible  <bruno@clisp.org>
+
+	Simplify inclusion of stackvma-mincore.c.
+	* src/stackvma-mincore.c (mincore_get_vma): Renamed from
+	sigsegv_get_vma.
+	* src/stackvma-linux.c: No need to define 'sigsegv_get_vma' and 'STATIC'
+	macros before including stackvma-mincore.c.
+	* src/stackvma-freebsd.c: Likewise.
+	* src/stackvma-netbsd.c: Likewise.
+	* src/stackvma-mquery.c: Likewise.
+	* src/stackvma-procfs.c: Likewise.
+	* src/stackvma-aix.c: New file.
+	* src/Makefile.am (EXTRA_DIST): Add it.
+	* configure.ac (CFG_STACKVMA): Set to stackvma-aix.c instead of
+	stackvma-mincore.c.
+
+2021-05-16  Bruno Haible  <bruno@clisp.org>
+
+	Drop supporting outdated way of building on native Windows.
+	* autogen.sh: Don't create config.h.msvc, src/sigsegv.h.msvc.
+	* Makefile.msvc: Remove file.
+	* Makefile.am (EXTRA_DIST): Remove Makefile.msvc, config.h.msvc.
+	(config.h.msvc): Remove rule.
+	* src/Makefile.am (EXTRA_DIST): Remove sigsegv.h.msvc.
+	(sigsegv.h.msvc): Remove rule.
+
+2021-05-16  Bruno Haible  <bruno@clisp.org>
+
+	Moved sigaltstack.m4 and stack-direction.m4 to gnulib.
+	* m4/sigaltstack.m4: Remove file.
+	* m4/stack-direction.m4: Remove file.
+	* autogen.sh: Copy the two files from gnulib.
+
+2021-05-16  Bruno Haible  <bruno@clisp.org>
+
+	Avoid compiler warning.
+	* src/stackvma-netbsd.c (sigsegv_get_vma): Avoid unreachable statement.
+
+2021-05-15  Bruno Haible  <bruno@clisp.org>
+
+	Avoid warning on systems with musl libc.
+	* src/stackvma-mincore.c (pageinfo_t): Treat all libcs on Linux like
+	glibc.
+
+2021-05-15  Bruno Haible  <bruno@clisp.org>
+
+	Rename test files.
+	* tests/test-catch-segv1.c: Renamed from tests/sigsegv1.c.
+	* tests/test-catch-segv2.c: Renamed from tests/sigsegv3.c.
+	* tests/test-catch-stackoverflow1.c: Renamed from
+	tests/stackoverflow1.c.
+	* tests/test-catch-stackoverflow2.c: Renamed from
+	tests/stackoverflow2.c.
+	* tests/test-segv-dispatcher1.c: Renamed from tests/sigsegv2.c.
+	* tests/altstack-util.h: Renamed from tests/altstack.h.
+	* tests/mmap-anon-util.h: Renamed from tests/mmaputil.h.
+
+2021-05-15  Bruno Haible  <bruno@clisp.org>
+
+	Improve comments.
+	* src/handler-unix.c: Mention Solaris 11 stack_violation().
+	* src/fault.h: SIGSEGV_FAULT_ADDRESS is not mandatory.
+	* src/stackvma-mquery.c: Update.
+
+2021-05-15  Bruno Haible  <bruno@clisp.org>
+
+	Fix possible warnings on AIX.
+	* src/stackvma-mincore.c (MINCORE_ADDR_T): Test _AIX, not UNIX_AIX.
+
+2021-05-15  Bruno Haible  <bruno@clisp.org>
+
+	Improve support for Solaris OpenIndiana.
+	* configure.ac: Make the test for <sys/procfs.h> succeed on Solaris
+	OpenIndiana even with -D_XOPEN_SOURCE=700.
+	* src/stackvma-procfs.c: Define __EXTENSIONS__, for Solaris OpenIndiana.
+	* NEWS: Mention the change.
+
+2021-02-28  Bruno Haible  <bruno@clisp.org>
+
+	Update DEPENDENCIES.
+	* DEPENDENCIES: List the normal dependencies of a package with an
+	Autoconf-generated configure file.
+
+2021-02-20  Bruno Haible  <bruno@clisp.org>
+
+	Support creating shared libraries on MidnightBSD.
+	Patch from <https://savannah.gnu.org/patch/?10007>.
+	* m4/libtool.m4: Treat MidnightBSD like FreeBSD.
+	* build-aux/ltmain.sh: Likewise.
+	* configure.ac (CFG_SIGNALS): Likewise.
+	* NEWS: Mention it.
+
+2021-02-20  Bruno Haible  <bruno@clisp.org>
+
+	Switch to autoconf 2.71.
+	* autogen.sh: Update comment.
+
 2021-01-16  Bruno Haible  <bruno@clisp.org>
 
 	Prepare for version 2.13.

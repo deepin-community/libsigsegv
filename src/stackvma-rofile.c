@@ -1,10 +1,10 @@
 /* Buffered read-only streams.
-   Copyright (C) 2008, 2016-2017  Bruno Haible <bruno@clisp.org>
+   Copyright (C) 2008, 2016-2017, 2023-2024  Bruno Haible <bruno@clisp.org>
 
-   This program is free software; you can redistribute it and/or modify
+   This program is free software: you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
-   the Free Software Foundation; either version 2, or (at your option)
-   any later version.
+   the Free Software Foundation; either version 2 of the License, or
+   (at your option) any later version.
 
    This program is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -12,8 +12,7 @@
    GNU General Public License for more details.
 
    You should have received a copy of the GNU General Public License
-   along with this program; if not, write to the Free Software Foundation,
-   Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.  */
+   along with this program.  If not, see <https://www.gnu.org/licenses/>.  */
 
 #include <errno.h> /* errno, EINTR */
 #include <fcntl.h> /* O_RDONLY */
@@ -42,7 +41,7 @@
      - On all platforms, if some other thread is doing memory allocations or
        deallocations between two read() calls, there is a high risk that the
        result of these two read() calls don't fit together, and as a
-       consequence we will parse gargage and either omit some VMAs or return
+       consequence we will parse garbage and either omit some VMAs or return
        VMAs with nonsensical addresses.
    So use mmap(), and ignore the resulting VMA.
    The stack-allocated buffer cannot be too large, because this can be called
@@ -106,7 +105,7 @@ rof_open (struct rofile *rof, const char *filename)
       /* Attempt to read the contents in a single system call.  */
       if (size > MIN_LEFTOVER)
         {
-          int n = read (fd, rof->buffer, size);
+          ssize_t n = read (fd, rof->buffer, size);
           if (n < 0 && errno == EINTR)
             goto retry;
 #if defined __DragonFly__
@@ -116,7 +115,7 @@ rof_open (struct rofile *rof, const char *filename)
               if (n <= 0)
                 /* Empty file.  */
                 goto fail1;
-              if (n + MIN_LEFTOVER <= size)
+              if (MIN_LEFTOVER <= size - n)
                 {
                   /* The buffer was sufficiently large.  */
                   rof->filled = n;
@@ -131,15 +130,15 @@ rof_open (struct rofile *rof, const char *filename)
                       if (n < 0)
                         /* Some error.  */
                         goto fail1;
-                      if (n + MIN_LEFTOVER > size - rof->filled)
-                        /* Allocate a larger buffer.  */
-                        break;
                       if (n == 0)
                         {
                           /* Reached the end of file.  */
                           close (fd);
                           return 0;
                         }
+                      if (size - rof->filled - n < MIN_LEFTOVER)
+                        /* Allocate a larger buffer.  */
+                        break;
                       rof->filled += n;
                     }
 #else

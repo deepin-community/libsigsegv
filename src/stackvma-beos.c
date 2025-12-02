@@ -1,10 +1,10 @@
 /* Determine the virtual memory area of a given address.  BeOS version.
    Copyright (C) 2002, 2006, 2016-2017, 2021  Bruno Haible <bruno@clisp.org>
 
-   This program is free software; you can redistribute it and/or modify
+   This program is free software: you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
-   the Free Software Foundation; either version 2, or (at your option)
-   any later version.
+   the Free Software Foundation; either version 2 of the License, or
+   (at your option) any later version.
 
    This program is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -12,8 +12,7 @@
    GNU General Public License for more details.
 
    You should have received a copy of the GNU General Public License
-   along with this program; if not, write to the Free Software Foundation,
-   Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.  */
+   along with this program.  If not, see <https://www.gnu.org/licenses/>.  */
 
 #include "stackvma.h"
 #include <OS.h>
@@ -75,7 +74,7 @@ callback (struct callback_locals *locals, uintptr_t start, uintptr_t end)
    the iteration terminates prematurely.
    This function may open file descriptors, but does not call malloc().
    Return 0 if all went well, or -1 in case of error.  */
-/* This code is a simplied copy (no handling of protection flags) of the
+/* This code is a simplified copy (no handling of protection flags) of the
    code in gnulib's lib/vma-iter.c.  */
 static int
 vma_iterate (struct callback_locals *locals)

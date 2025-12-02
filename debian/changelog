@@ -1,14 +1,23 @@
-libsigsegv (2.13.1-1+dde) UNRELEASED; urgency=medium
+libsigsegv (2.15-1) unstable; urgency=medium
 
-  * update
+  [ Sébastien Villemot ]
+  * Remove myself from Uploaders
 
- -- Debian Common Lisp Team <debian-common-lisp@lists.debian.org>  Tue, 26 Jul 2022 11:07:22 +0800
+  [ Peter Van Eynde ]
+  * Add all signing keys
+  * New upstream version 2.15
+  * This upstream also works with LTO (link time optimization) enabled.
+    (Closes: #1015522)
 
-libsigsegv (2.13.1-1+dde) unstable; urgency=medium
+ -- Peter Van Eynde <pvaneynd@debian.org>  Wed, 24 Sep 2025 08:24:18 +0200
 
-  * add sw64 porting.
+libsigsegv (2.14-1) unstable; urgency=medium
 
- -- Zhang FeiLong <zhangfeilong@uniontech.com>  Tue, 12 Apr 2022 17:11:40 +0800
+  * New upstream release
+  * d/copyright: reflect upstream changes
+  * Update standards version to 4.6.0, no changes needed.
+
+ -- Sébastien Villemot <sebastien@debian.org>  Fri, 28 Jan 2022 10:49:42 +0100
 
 libsigsegv (2.13-1) unstable; urgency=medium
 

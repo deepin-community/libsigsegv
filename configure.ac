@@ -1,12 +1,12 @@
 dnl Autoconf configuration for libsigsegv.
 dnl Process this file with autoconf to produce a configure script.
 dnl
-dnl Copyright (C) 2002-2021  Bruno Haible <bruno@clisp.org>
+dnl Copyright (C) 2002-2025  Bruno Haible <bruno@clisp.org>
 dnl
-dnl This program is free software; you can redistribute it and/or modify
+dnl This program is free software: you can redistribute it and/or modify
 dnl it under the terms of the GNU General Public License as published by
-dnl the Free Software Foundation; either version 2, or (at your option)
-dnl any later version.
+dnl the Free Software Foundation; either version 2 of the License, or
+dnl (at your option) any later version.
 dnl
 dnl This program is distributed in the hope that it will be useful,
 dnl but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -14,13 +14,13 @@ dnl MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 dnl GNU General Public License for more details.
 dnl
 dnl You should have received a copy of the GNU General Public License
-dnl along with this program; if not, write to the Free Software Foundation,
-dnl Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+dnl along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 AC_PREREQ([2.64])
-AC_INIT([libsigsegv], [2.13])
+AC_INIT([libsigsegv], [2.15])
 AC_CONFIG_SRCDIR([src/sigsegv.h.in])
 AC_CONFIG_AUX_DIR([build-aux])
+AC_CONFIG_MACRO_DIRS([m4])
 AC_CONFIG_HEADERS([config.h])
 
 RSE_BOLD
@@ -76,6 +76,8 @@ AC_MSG_RESULT([$sv_cv_host])
 PLATFORM="$sv_cv_host"
 AC_SUBST([PLATFORM])
 
+gl_MUSL_LIBC
+
 dnl ========================== Done with PLATFORM ==========================
 
 
@@ -99,7 +101,8 @@ dnl Requires AC_CANONICAL_HOST.
 dnl List of signals that are sent when an invalid virtual memory address
 dnl is accessed, or when the stack overflows.
 case "$host_os" in
-  sunos4* | freebsd* | dragonfly* | openbsd* | netbsd* | kfreebsd* | knetbsd*)
+  sunos4* | freebsd* | dragonfly* | openbsd* | netbsd* | midnightbsd* | \
+  kfreebsd* | knetbsd*)
     CFG_SIGNALS=signals-bsd.h ;;
   hpux*)
     CFG_SIGNALS=signals-hpux.h ;;
@@ -132,11 +135,19 @@ dnl Requires AC_CANONICAL_HOST, SV_MMAP_ANON.
 
 # How to write a SIGSEGV handler with access to the fault address.
 
-# On MacOS X 10.2 or newer, we don't need these tests, because we'll end up
+# Cygwin >= 2.1 supports sigaltstack().  For older versions of Cygwin,
+# a Windows API based handler is needed, with complex code to make EFAULT work.
+# Use the simpler approach by default.
+AC_ARG_ENABLE([support-old-cygwin],
+  [AS_HELP_STRING([--enable-support-old-cygwin],
+                  [enable support of Cygwin older than 2.1 (2015)])])
+
+# On MacOS X 10.2 to 10.12, we don't need these tests, because we'll end up
 # using handler-macos.c anyway. If we were to perform the tests, 5 Crash Report
 # dialog windows would pop up.
+# Starting with MacOS X 10.13 (at least), handler-unix.c works fine too.
 case "$host_os" in
-  macos* | darwin[[6-9]]* | darwin[[1-9]][[0-9]]*) ;;
+  macos* | darwin[[6-9]]* | darwin1[[0-6]]*) ;;
   *)
 
 dnl FIXME: Put in some more known values into the third argument.
@@ -228,7 +239,7 @@ SV_TRY_FAULT([MacOSX/Darwin7 PowerPC], sv_cv_fault_macosdarwin7_ppc,
   [#include "$srcdir/src/fault-macosdarwin7-powerpc.c"],
   [int sig, siginfo_t *sip, ucontext_t *ucp],
   [get_fault_addr (sip, ucp)],
-  [action.sa_sigaction = &sigsegv_handler;
+  [action.sa_sigaction = (void (*) (int, siginfo_t *, void *)) &sigsegv_handler;
    action.sa_flags = SA_SIGINFO;])
 
 if test "$sv_cv_fault_macosdarwin7_ppc" != yes; then
@@ -298,12 +309,13 @@ if test -z "$CFG_FAULT" && test "$sv_cv_fault_netbsd_alpha" = yes; then
 fi
 if test -z "$CFG_FAULT" && test "$sv_cv_fault_hurd" = yes; then
   case "$host_os" in
-    netbsd*) # A false positive.
-      ;;
-    *)
+    gnu*)
+      # Test $sv_cv_fault_hurd before testing $sv_cv_fault_posix, because
+      # support for SA_SIGINFO in Hurd is present only in upstream glibc ≥ 2.33
+      # or in Debian glibc ≥ 2.19.
       case "$host_cpu" in
-        i?86)
-          CFG_FAULT=fault-hurd-i386.h
+        i?86 | x86_64)
+          CFG_FAULT=fault-hurd-i386-old.h
           ;;
         *)
           CFG_FAULT=fault-hurd.h
@@ -367,6 +379,16 @@ if test -z "$CFG_FAULT" && test "$sv_cv_fault_posix" = yes; then
           FAULT_CONTEXT='struct sigcontext'
           ;;
       esac
+      ;;
+    darwin*)
+      case "$host_cpu" in
+        aarch64*) CFG_FAULT=fault-macos-arm64.h ;;
+        i?86 | x86_64) CFG_FAULT=fault-macos-i386.h ;;
+        powerpc* | rs6000) CFG_FAULT=fault-macos-powerpc.h ;;
+        *) CFG_FAULT=fault-macos.h ;;
+      esac
+      FAULT_CONTEXT='ucontext_t'
+      FAULT_CONTEXT_INCLUDE='#include <sys/ucontext.h>'
       ;;
     haiku*)
       case "$host_cpu" in
@@ -438,6 +460,9 @@ if test -z "$CFG_FAULT" && test "$sv_cv_fault_posix" = yes; then
             ia64)
               CFG_FAULT=fault-linux-ia64.h
               ;;
+            loongarch64)
+              CFG_FAULT=fault-linux-loongarch.h
+              ;;
             m68*)
               CFG_FAULT=fault-linux-m68k.h
               ;;
@@ -461,6 +486,26 @@ if test -z "$CFG_FAULT" && test "$sv_cv_fault_posix" = yes; then
               ;;
             sparc*)
               CFG_FAULT=fault-linux-sparc.h
+              ;;
+            *)
+              CFG_FAULT=fault-posix-ucontext.h
+              ;;
+          esac
+          ;;
+        cygwin*)
+          case "$host_cpu" in
+            i?86* | x86_64*)
+              CFG_FAULT=fault-cygwin-i386.h
+              ;;
+            *)
+              CFG_FAULT=fault-cygwin.h
+              ;;
+          esac
+          ;;
+        gnu*)
+          case "$host_cpu" in
+            i?86 | x86_64)
+              CFG_FAULT=fault-hurd-i386.h
               ;;
             *)
               CFG_FAULT=fault-posix-ucontext.h
@@ -568,22 +613,24 @@ if test -z "$CFG_FAULT" && test "$sv_cv_fault_macosdarwin5_ppc" = yes; then
   esac
 fi
 case "$host_os" in
-  mingw*)
+  mingw* | windows*)
     FAULT_CONTEXT='CONTEXT'
     FAULT_CONTEXT_INCLUDE='#include <windows.h>'
     CFG_FAULT=fault-win32.h # nonexistent, just a dummy
     ;;
   cygwin*)
-    FAULT_CONTEXT='struct _CONTEXT'
-    # CONTEXT is defined in <windows.h>, but cygwin programs should not
-    # normally inspect the contents of CONTEXT, and the outright inclusion
-    # of <windows.h> pollutes the namespace.
-    FAULT_CONTEXT_INCLUDE='struct _CONTEXT;'
-    # Cygwin 1.7 uses fault-posix.h. Cygwin 1.5.x needs a hacky workaround.
-    if test -z "$CFG_FAULT"; then
-      CFG_FAULT=fault-cygwin-old.h
-      AC_DEFINE([OLD_CYGWIN_WORKAROUND], [1],
-        [Define to 1 on Cygwin versions older than 1.7.])
+    if test "$enable_support_old_cygwin" = yes; then
+      FAULT_CONTEXT='struct _CONTEXT'
+      # CONTEXT is defined in <windows.h>, but cygwin programs should not
+      # normally inspect the contents of CONTEXT, and the outright inclusion
+      # of <windows.h> pollutes the namespace.
+      FAULT_CONTEXT_INCLUDE='struct _CONTEXT;'
+      # Cygwin 1.7 uses fault-posix.h. Cygwin 1.5.x needs a hacky workaround.
+      if test -z "$CFG_FAULT"; then
+        CFG_FAULT=fault-cygwin-old.h
+        AC_DEFINE([OLD_CYGWIN_WORKAROUND], [1],
+          [Define to 1 on Cygwin versions older than 1.7.])
+      fi
     fi
     ;;
 esac
@@ -640,7 +687,7 @@ else
       ;;
     macos* | darwin*)
       case "$host_cpu" in
-        i?86 | x86_64) CFG_FAULT=fault-macos-i386.h ;;
+        i?86 | x86_64) CFG_FAULT=fault-macos-i386-old.h ;;
       esac
       FAULT_CONTEXT='struct sigcontext'
       ;;
@@ -709,19 +756,18 @@ if test "$use_stackvma" != no; then
   dnl Determination of the stack's virtual memory area.
   AC_CACHE_CHECK([for prmap_t in sys/procfs.h], [sv_cv_procfsvma], [
     AC_LINK_IFELSE(
-      [AC_LANG_PROGRAM([[#include <sys/procfs.h>]], [[prmap_t x;]])],
+      [AC_LANG_PROGRAM([[
+         /* Persuade Solaris OpenIndiana <signal.h> to declare 'struct sigaltstack'.  */
+         #define __EXTENSIONS__ 1
+         #include <sys/procfs.h>
+         ]], [[prmap_t x;]])],
       [sv_cv_procfsvma=yes], [sv_cv_procfsvma=no])
   ])
   AC_CHECK_FUNCS([mquery mincore])
   CFG_STACKVMA=
   if test $sv_cv_procfsvma = yes; then
-    # Note: On AIX, there is a /proc/$pic/map file, that contains records of type
-    # prmap_t, defined in <sys/procfs.h>.  But it lists only the virtual memory
-    # areas that are connected to a file, not the anonymous ones.  Therefore, on
-    # this platform, stackvma-procfs.c returns bogus results, whereas
-    # stackvma-mincore.c returns correct ones.
     case "$host_os" in
-      aix*) ;;
+      aix*) CFG_STACKVMA=stackvma-aix.c ;;
       *) CFG_STACKVMA=stackvma-procfs.c ;;
     esac
   fi
@@ -731,6 +777,10 @@ if test "$use_stackvma" != no; then
       freebsd* | kfreebsd*-gnu* | dragonfly*)
                              CFG_STACKVMA=stackvma-freebsd.c ;;
       netbsd*)               CFG_STACKVMA=stackvma-netbsd.c ;;
+      cygwin*)               if test "$enable_support_old_cygwin" != yes; then
+                               CFG_STACKVMA=stackvma-cygwin.c
+                             fi
+                             ;;
       beos* | haiku*)        CFG_STACKVMA=stackvma-beos.c ;;
       macos* | darwin*)      CFG_STACKVMA=stackvma-mach.c ;;
       dnl About gnu*): GNU/Hurd provides a /proc/self/maps file that is similar
@@ -745,7 +795,7 @@ if test "$use_stackvma" != no; then
     CFG_STACKVMA=stackvma-mquery.c
   fi
   if test -z "$CFG_STACKVMA" && test $ac_cv_func_mincore = yes; then
-    CFG_STACKVMA=stackvma-mincore.c
+    CFG_STACKVMA=stackvma-aix.c
   fi
   if test -n "$CFG_STACKVMA"; then
     AC_DEFINE([HAVE_STACKVMA], [1],
@@ -934,7 +984,7 @@ AC_CACHE_CHECK([if the system supports catching stack overflow],
     sv_cv_have_stack_overflow_recovery=yes
   else
     case "$host_os" in
-      mingw* | cygwin*) sv_cv_have_stack_overflow_recovery=yes ;;
+      mingw* | windows* | cygwin*) sv_cv_have_stack_overflow_recovery=yes ;;
       *)
         if test "$CFG_LEAVE" != 'leave-none.c'; then
           if test "$sv_cv_sigaltstack" != no; then
@@ -1003,18 +1053,21 @@ dnl Requires AC_CANONICAL_HOST, CFG_HANDLER / CFG_FAULT / etc.,
 dnl HAVE_SIGSEGV_RECOVERY, HAVE_STACK_OVERFLOW_RECOVERY.
 
 case "$host_os" in
-  mingw* | cygwin*) CFG_HANDLER=handler-win32.c ;;
-  *)
-    if test -z "$CFG_HANDLER"; then
-      if test $sv_cv_have_sigsegv_recovery = no \
-         && test $sv_cv_have_stack_overflow_recovery = no; then
-        CFG_HANDLER=handler-none.c
-      else
-        CFG_HANDLER=handler-unix.c
-      fi
+  mingw* | windows*) CFG_HANDLER=handler-win32.c ;;
+  cygwin*)
+    if test "$enable_support_old_cygwin" = yes; then
+      CFG_HANDLER=handler-win32.c
     fi
     ;;
 esac
+if test -z "$CFG_HANDLER"; then
+  if test $sv_cv_have_sigsegv_recovery = no \
+     && test $sv_cv_have_stack_overflow_recovery = no; then
+    CFG_HANDLER=handler-none.c
+  else
+    CFG_HANDLER=handler-unix.c
+  fi
+fi
 AC_DEFINE_UNQUOTED([CFG_HANDLER], ["$CFG_HANDLER"],
   [The name of the file implementing the handler functionality.])
 AC_SUBST([CFG_HANDLER])
