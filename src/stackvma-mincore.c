@@ -1,10 +1,10 @@
 /* Determine the virtual memory area of a given address.
    Copyright (C) 2006, 2008-2010, 2016-2018, 2021  Bruno Haible <bruno@clisp.org>
 
-   This program is free software; you can redistribute it and/or modify
+   This program is free software: you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
-   the Free Software Foundation; either version 2, or (at your option)
-   any later version.
+   the Free Software Foundation; either version 2 of the License, or
+   (at your option) any later version.
 
    This program is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -12,8 +12,7 @@
    GNU General Public License for more details.
 
    You should have received a copy of the GNU General Public License
-   along with this program; if not, write to the Free Software Foundation,
-   Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.  */
+   along with this program.  If not, see <https://www.gnu.org/licenses/>.  */
 
 /* mincore() is a system call that allows to inquire the status of a
    range of pages of virtual memory.  In particular, it allows to inquire
@@ -27,6 +26,8 @@
      - NetBSD,  since NetBSD 3.0 (at least),     1
      - OpenBSD, since OpenBSD 2.6 (at least),    1
      - AIX,     since AIX 5.3,                   1
+   As of 2019, also on
+     - Hurd.
    However, while the API allows to easily determine the bounds of mapped
    virtual memory, it does not make it easy to find the bounds of _unmapped_
    virtual memory ranges.  We try to work around this, but it may still be
@@ -45,15 +46,15 @@
 
 /* The AIX declaration of mincore() uses 'caddr_t', whereas the other platforms
    use 'void *'. */
-#ifdef UNIX_AIX
+#ifdef _AIX
 typedef caddr_t MINCORE_ADDR_T;
 #else
 typedef void* MINCORE_ADDR_T;
 #endif
 
-/* The glibc declaration of mincore() uses 'unsigned char *', whereas the BSD
-   declaration uses 'char *'.  */
-#if __GLIBC__ >= 2 || defined __ANDROID__
+/* The glibc and musl declaration of mincore() uses 'unsigned char *', whereas
+   the BSD declaration uses 'char *'.  */
+#if __GLIBC__ >= 2 || defined __linux__ || defined __ANDROID__
 typedef unsigned char pageinfo_t;
 #else
 typedef char pageinfo_t;
@@ -281,11 +282,8 @@ mincore_is_near_this (uintptr_t addr, struct vma_struct *vma)
 
 #endif
 
-#ifdef STATIC
-STATIC
-#endif
-int
-sigsegv_get_vma (uintptr_t address, struct vma_struct *vma)
+static int
+mincore_get_vma (uintptr_t address, struct vma_struct *vma)
 {
   if (pagesize == 0)
     init_pagesize ();

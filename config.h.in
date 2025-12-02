@@ -31,16 +31,13 @@
 /* Define if getpagesize() is available as a function or a macro. */
 #undef HAVE_GETPAGESIZE
 
-/* Define to 1 if you have the `getrlimit' function. */
+/* Define to 1 if you have the 'getrlimit' function. */
 #undef HAVE_GETRLIMIT
 
 /* Define to 1 if you have the <inttypes.h> header file. */
 #undef HAVE_INTTYPES_H
 
-/* Define to 1 if you have the <memory.h> header file. */
-#undef HAVE_MEMORY_H
-
-/* Define to 1 if you have the `mincore' function. */
+/* Define to 1 if you have the 'mincore' function. */
 #undef HAVE_MINCORE
 
 /* Define if <sys/mman.h> defines MAP_ANON and mmaping with MAP_ANON works. */
@@ -53,16 +50,16 @@
 /* Define if mmaping of the special device /dev/zero works. */
 #undef HAVE_MMAP_DEVZERO
 
-/* Define to 1 if you have the `mquery' function. */
+/* Define to 1 if you have the 'mquery' function. */
 #undef HAVE_MQUERY
 
 /* Define if PAGESIZE is available as a macro. */
 #undef HAVE_PAGESIZE
 
-/* Define to 1 if you have the `setrlimit' function. */
+/* Define to 1 if you have the 'setrlimit' function. */
 #undef HAVE_SETRLIMIT
 
-/* Define to 1 if you have the `sigaltstack' function. */
+/* Define to 1 if you have the 'sigaltstack' function. */
 #undef HAVE_SIGALTSTACK
 
 /* Define if CFG_STACKVMA is set to a nontrivial source file. */
@@ -70,6 +67,9 @@
 
 /* Define to 1 if you have the <stdint.h> header file. */
 #undef HAVE_STDINT_H
+
+/* Define to 1 if you have the <stdio.h> header file. */
+#undef HAVE_STDIO_H
 
 /* Define to 1 if you have the <stdlib.h> header file. */
 #undef HAVE_STDLIB_H
@@ -95,7 +95,7 @@
 /* Define to 1 if you have the <ucontext.h> header file. */
 #undef HAVE_UCONTEXT_H
 
-/* Define to 1 if the system has the type `uintptr_t'. */
+/* Define to 1 if the system has the type 'uintptr_t'. */
 #undef HAVE_UINTPTR_T
 
 /* Define to 1 if you have the <unistd.h> header file. */
@@ -106,6 +106,9 @@
 
 /* Define to the sub-directory where libtool stores uninstalled libraries. */
 #undef LT_OBJDIR
+
+/* Define to 1 on musl libc. */
+#undef MUSL_LIBC
 
 /* Define to 1 on Cygwin versions older than 1.7. */
 #undef OLD_CYGWIN_WORKAROUND
@@ -141,7 +144,9 @@
    lower addresses STACK_DIRECTION = 0 => spaghetti stack. */
 #undef STACK_DIRECTION
 
-/* Define to 1 if you have the ANSI C header files. */
+/* Define to 1 if all of the C89 standard headers exist (not just the ones
+   required in a freestanding environment). This macro is provided for
+   backward compatibility; new code need not use it. */
 #undef STDC_HEADERS
 
 /* Version number of package */
