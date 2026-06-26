@@ -1,3 +1,199 @@
+2022-01-07  Bruno Haible  <bruno@clisp.org>
+
+	Prepare for version 2.14.
+	* configure.ac (AC_INIT): Bump version to 2.14.
+	* src/sigsegv.h.in (LIBSIGSEGV_VERSION): Likewise.
+	* README: Likewise.
+	* src/Makefile.am (LIBSIGSEGV_VERSION_INFO): Bump to 2:7:0.
+
+2022-01-07  Bruno Haible  <bruno@clisp.org>
+
+	Improve support for Linux/LoongArch64.
+	* src/fault-linux-loongarch.h: New file.
+	* src/Makefile.am (noinst_HEADERS): Add it.
+	* configure.ac (CFG_FAULT): Use this file on Linux/LoongArch64.
+	* NEWS: Mention it.
+
+2021-09-13  Bruno Haible  <bruno@clisp.org>
+
+	Improve support for OpenBSD/PowerPC64.
+	Based on a patch by Christian Weisgerber <naddy@mips.inka.de> at
+	<https://lists.gnu.org/archive/html/bug-gnulib/2021-09/msg00045.html>.
+	* src/fault-openbsd-powerpc.h (SIGSEGV_FAULT_STACKPOINTER): Define
+	differently in 64-bit mode.
+	* NEWS: Mention it.
+
+2021-08-07  Bruno Haible  <bruno@clisp.org>
+
+	tests: Silence some GCC warnings.
+	Patch by Paul Eggert.
+	* tests/test-catch-segv1.c, tests/test-catch-stackoverflow1.c,
+	tests/test-catch-stackoverflow2.c: Declare some functions and variables
+	static, to pacify GCC when warning about external functions missing
+	declarations.
+
+2021-06-09  Bruno Haible  <bruno@clisp.org>
+
+	tests: Hide a null pointer from the compiler's optimizations.
+	Patch by Paul Eggert.
+	* tests/test-catch-stackoverflow2.c (null_pointer_to_volatile_int): New
+	variable.
+	(main): Use it.
+
+2021-06-06  Bruno Haible  <bruno@clisp.org>
+
+	Avoid a gcc warning "declaration of 'sig' shadows a parameter".
+	Reported by Dmitry V. Levin <ldv@altlinux.org> in
+	<https://lists.gnu.org/archive/html/bug-gnulib/2021-06/msg00018.html>.
+	* src/handler-unix.c (sigsegv_handler): Use a different local variable
+	name than 'sig'.
+
+2021-05-29  Bruno Haible  <bruno@clisp.org>
+
+	Fix typo in comment.
+	* src/stackvma-procfs.c: Fix typo in comment, found by Paul Eggert.
+	* src/stackvma-vma-iter.c: Likewise.
+	* src/stackvma-beos.c: Likewise.
+
+2021-05-16  Bruno Haible  <bruno@clisp.org>
+
+	Avoid compilation error with glibc >= 2.34.
+	* lib/sigsegv.h.in (SIGSTKSZ): On glibc systems, redefine to a suitable
+	constant.
+	* m4/sigaltstack-longjmp.m4 (SV_TRY_LEAVE_HANDLER_LONGJMP): Likewise.
+	* m4/sigaltstack-siglongjmp.m4 (SV_TRY_LEAVE_HANDLER_SIGLONGJMP):
+	Likewise.
+
+2021-05-16  Bruno Haible  <bruno@clisp.org>
+
+	On Cygwin, use the sigaltstack-based approach by default.
+	* src/fault-cygwin.h: New file.
+	* src/fault-cygwin-i386.h: New file.
+	* src/stackvma-cygwin.c: New file, based on src/stackvma-netbsd.c.
+	* src/stackvma-vma-iter.c: Enable /proc-reading code also on Cygwin.
+	* src/Makefile.am (noinst_HEADERS): Add fault-cygwin.h,
+	fault-cygwin-i386.h.
+	(EXTRA_DIST): Add stackvma-cygwin.c.
+	* configure.ac: Use fault-cygwin-i386.h instead of
+	fault-posix-ucontext.h. Add --enable-support-old-cygwin option. When it
+	is not specified, use handler-unix.c and stackvma-cygwin.c
+	* NEWS: Mention that 64-bit Cygwin is now supported.
+
+2021-05-16  Bruno Haible  <bruno@clisp.org>
+
+	Simplify: Use the POSIX API instead of Mach API on newer macOS versions.
+	* src/fault-macos.h: New file.
+	* src/fault-macos-arm64.h: New file.
+	* src/fault-macos-i386.h: New file.
+	* src/fault-macos-powerpc.h: New file.
+	* src/Makefile.am (noinst_HEADERS): Add them.
+	* configure.ac (CFG_FAULT): On macOS 10.13 or newer, use fault-macos*.h
+	and handler-unix.c, instead of handler-macos.c.
+
+2021-05-16  Bruno Haible  <bruno@clisp.org>
+
+	Rename fault-macos-i386.h to fault-macos-i386-old.h.
+	* src/fault-macos-i386-old.h: Renamed from src/fault-macos-i386.h.
+	* configure.ac (CFG_FAULT): Update.
+	* src/Makefile.am (noinst_HEADERS): Likewise.
+
+2021-05-16  Bruno Haible  <bruno@clisp.org>
+
+	Simplify inclusion of stackvma-mincore.c.
+	* src/stackvma-mincore.c (mincore_get_vma): Renamed from
+	sigsegv_get_vma.
+	* src/stackvma-linux.c: No need to define 'sigsegv_get_vma' and 'STATIC'
+	macros before including stackvma-mincore.c.
+	* src/stackvma-freebsd.c: Likewise.
+	* src/stackvma-netbsd.c: Likewise.
+	* src/stackvma-mquery.c: Likewise.
+	* src/stackvma-procfs.c: Likewise.
+	* src/stackvma-aix.c: New file.
+	* src/Makefile.am (EXTRA_DIST): Add it.
+	* configure.ac (CFG_STACKVMA): Set to stackvma-aix.c instead of
+	stackvma-mincore.c.
+
+2021-05-16  Bruno Haible  <bruno@clisp.org>
+
+	Drop supporting outdated way of building on native Windows.
+	* autogen.sh: Don't create config.h.msvc, src/sigsegv.h.msvc.
+	* Makefile.msvc: Remove file.
+	* Makefile.am (EXTRA_DIST): Remove Makefile.msvc, config.h.msvc.
+	(config.h.msvc): Remove rule.
+	* src/Makefile.am (EXTRA_DIST): Remove sigsegv.h.msvc.
+	(sigsegv.h.msvc): Remove rule.
+
+2021-05-16  Bruno Haible  <bruno@clisp.org>
+
+	Moved sigaltstack.m4 and stack-direction.m4 to gnulib.
+	* m4/sigaltstack.m4: Remove file.
+	* m4/stack-direction.m4: Remove file.
+	* autogen.sh: Copy the two files from gnulib.
+
+2021-05-16  Bruno Haible  <bruno@clisp.org>
+
+	Avoid compiler warning.
+	* src/stackvma-netbsd.c (sigsegv_get_vma): Avoid unreachable statement.
+
+2021-05-15  Bruno Haible  <bruno@clisp.org>
+
+	Avoid warning on systems with musl libc.
+	* src/stackvma-mincore.c (pageinfo_t): Treat all libcs on Linux like
+	glibc.
+
+2021-05-15  Bruno Haible  <bruno@clisp.org>
+
+	Rename test files.
+	* tests/test-catch-segv1.c: Renamed from tests/sigsegv1.c.
+	* tests/test-catch-segv2.c: Renamed from tests/sigsegv3.c.
+	* tests/test-catch-stackoverflow1.c: Renamed from
+	tests/stackoverflow1.c.
+	* tests/test-catch-stackoverflow2.c: Renamed from
+	tests/stackoverflow2.c.
+	* tests/test-segv-dispatcher1.c: Renamed from tests/sigsegv2.c.
+	* tests/altstack-util.h: Renamed from tests/altstack.h.
+	* tests/mmap-anon-util.h: Renamed from tests/mmaputil.h.
+
+2021-05-15  Bruno Haible  <bruno@clisp.org>
+
+	Improve comments.
+	* src/handler-unix.c: Mention Solaris 11 stack_violation().
+	* src/fault.h: SIGSEGV_FAULT_ADDRESS is not mandatory.
+	* src/stackvma-mquery.c: Update.
+
+2021-05-15  Bruno Haible  <bruno@clisp.org>
+
+	Fix possible warnings on AIX.
+	* src/stackvma-mincore.c (MINCORE_ADDR_T): Test _AIX, not UNIX_AIX.
+
+2021-05-15  Bruno Haible  <bruno@clisp.org>
+
+	Improve support for Solaris OpenIndiana.
+	* configure.ac: Make the test for <sys/procfs.h> succeed on Solaris
+	OpenIndiana even with -D_XOPEN_SOURCE=700.
+	* src/stackvma-procfs.c: Define __EXTENSIONS__, for Solaris OpenIndiana.
+	* NEWS: Mention the change.
+
+2021-02-28  Bruno Haible  <bruno@clisp.org>
+
+	Update DEPENDENCIES.
+	* DEPENDENCIES: List the normal dependencies of a package with an
+	Autoconf-generated configure file.
+
+2021-02-20  Bruno Haible  <bruno@clisp.org>
+
+	Support creating shared libraries on MidnightBSD.
+	Patch from <https://savannah.gnu.org/patch/?10007>.
+	* m4/libtool.m4: Treat MidnightBSD like FreeBSD.
+	* build-aux/ltmain.sh: Likewise.
+	* configure.ac (CFG_SIGNALS): Likewise.
+	* NEWS: Mention it.
+
+2021-02-20  Bruno Haible  <bruno@clisp.org>
+
+	Switch to autoconf 2.71.
+	* autogen.sh: Update comment.
+
 2021-01-16  Bruno Haible  <bruno@clisp.org>
 
 	Prepare for version 2.13.

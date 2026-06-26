@@ -1,10 +1,10 @@
 /* Fault handler information.  Unix version.
    Copyright (C) 1993-1999, 2002-2003, 2006, 2008-2009, 2016-2017, 2021  Bruno Haible <bruno@clisp.org>
 
-   This program is free software; you can redistribute it and/or modify
+   This program is free software: you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
-   the Free Software Foundation; either version 2, or (at your option)
-   any later version.
+   the Free Software Foundation; either version 2 of the License, or
+   (at your option) any later version.
 
    This program is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -12,8 +12,7 @@
    GNU General Public License for more details.
 
    You should have received a copy of the GNU General Public License
-   along with this program; if not, write to the Free Software Foundation,
-   Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.  */
+   along with this program.  If not, see <https://www.gnu.org/licenses/>.  */
 
 /* Persuade glibc <sys/ucontext.h> to declare macros designating register
    indices: REG_RSP on x86_64, REG_ESP on i386.  */
@@ -58,6 +57,9 @@
      On OSes which preallocate the stack's VMA with its maximum size
      (like BeOS), we use the stack's VMA directly.
  */
+/* Note: Solaris 11 defines a function 'stack_violation'
+   <https://docs.oracle.com/cd/E26502_01/html/E29034/stack-violation-3c.html>.
+   It merely implements heuristic BC, therefore no need to use it.  */
 
 #include <stdint.h>
 #include <stdlib.h>
@@ -273,7 +275,7 @@ sigsegv_handler (SIGSEGV_FAULT_HANDLER_ARGLIST)
           /* Handler declined responsibility for real.  */
 
           /* Remove ourselves and dump core.  */
-          SIGSEGV_FOR_ALL_SIGNALS (sig, signal (sig, SIG_DFL);)
+          SIGSEGV_FOR_ALL_SIGNALS (signo, signal (signo, SIG_DFL);)
         }
 
 #if HAVE_STACK_OVERFLOW_RECOVERY
@@ -368,7 +370,7 @@ sigsegv_handler (int sig)
     }
 
   /* Remove ourselves and dump core.  */
-  SIGSEGV_FOR_ALL_SIGNALS (sig, signal (sig, SIG_DFL);)
+  SIGSEGV_FOR_ALL_SIGNALS (signo, signal (signo, SIG_DFL);)
 }
 
 #endif
