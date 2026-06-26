@@ -1,11 +1,11 @@
-/* Test the stack overflow handler.
-   Copyright (C) 2002-2006, 2008, 2010  Bruno Haible <bruno@clisp.org>
+/* Test that stack overflow and SIGSEGV are correctly distinguished.
+   Copyright (C) 2002-2006, 2008, 2016, 2021  Bruno Haible <bruno@clisp.org>
    Copyright (C) 2010 Eric Blake <eblake@redhat.com>
 
-   This program is free software; you can redistribute it and/or modify
+   This program is free software: you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
-   the Free Software Foundation; either version 2, or (at your option)
-   any later version.
+   the Free Software Foundation; either version 2 of the License, or
+   (at your option) any later version.
 
    This program is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -13,18 +13,18 @@
    GNU General Public License for more details.
 
    You should have received a copy of the GNU General Public License
-   along with this program; if not, write to the Free Software Foundation,
-   Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.  */
+   along with this program.  If not, see <https://www.gnu.org/licenses/>.  */
 
 #ifndef _MSC_VER
 # include <config.h>
 #endif
 
 #include "sigsegv.h"
+#include <stdint.h>
 #include <stdio.h>
 #include <limits.h>
 
-#if HAVE_STACK_OVERFLOW_RECOVERY
+#if HAVE_STACK_OVERFLOW_RECOVERY && HAVE_SIGSEGV_RECOVERY
 
 #if defined _WIN32 && !defined __CYGWIN__
   /* Windows doesn't have sigset_t.  */
@@ -33,6 +33,7 @@
 # define sigprocmask(how,set,oldset)
 #endif
 
+#include "mmap-anon-util.h"
 #include <stddef.h> /* needed for NULL on SunOS4 */
 #include <stdlib.h> /* for abort, exit */
 #include <signal.h>
@@ -42,15 +43,14 @@
 # include <sys/time.h>
 # include <sys/resource.h>
 #endif
-#include "altstack.h"
+#include "altstack-util.h"
 
-jmp_buf mainloop;
-sigset_t mainsigset;
+static jmp_buf mainloop;
+static sigset_t mainsigset;
 
-volatile int pass = 0;
-
-volatile char *stack_lower_bound;
-volatile char *stack_upper_bound;
+static volatile int pass = 0;
+static uintptr_t page;
+static volatile int *null_pointer_to_volatile_int /* = NULL */;
 
 static void
 stackoverflow_handler_continuation (void *arg1, void *arg2, void *arg3)
@@ -59,21 +59,43 @@ stackoverflow_handler_continuation (void *arg1, void *arg2, void *arg3)
   longjmp (mainloop, arg);
 }
 
-void
+static void
 stackoverflow_handler (int emergency, stackoverflow_context_t scp)
 {
-  char dummy;
-  volatile char *addr = &dummy;
-  if (!(addr >= stack_lower_bound && addr <= stack_upper_bound))
-    abort ();
   pass++;
-  printf ("Stack overflow %d caught.\n", pass);
+  if (pass <= 2)
+    printf ("Stack overflow %d caught.\n", pass);
+  else
+    {
+      printf ("Segmentation violation misdetected as stack overflow.\n");
+      exit (1);
+    }
   sigprocmask (SIG_SETMASK, &mainsigset, NULL);
   sigsegv_leave_handler (stackoverflow_handler_continuation,
                          (void *) (long) (emergency ? -1 : pass), NULL, NULL);
 }
 
-volatile int *
+static int
+sigsegv_handler (void *address, int emergency)
+{
+  /* This test is necessary to distinguish stack overflow and SIGSEGV.  */
+  if (!emergency)
+    return 0;
+
+  pass++;
+  if (pass <= 2)
+    {
+      printf ("Stack overflow %d missed.\n", pass);
+      exit (1);
+    }
+  else
+    printf ("Segmentation violation correctly detected.\n");
+  sigprocmask (SIG_SETMASK, &mainsigset, NULL);
+  return sigsegv_leave_handler (stackoverflow_handler_continuation,
+                                (void *) (long) pass, NULL, NULL);
+}
+
+static volatile int *
 recurse_1 (int n, volatile int *p)
 {
   if (n < INT_MAX)
@@ -81,7 +103,7 @@ recurse_1 (int n, volatile int *p)
   return p;
 }
 
-int
+static int
 recurse (volatile int n)
 {
   return *recurse_1 (n, &n);
@@ -90,6 +112,8 @@ recurse (volatile int n)
 int
 main ()
 {
+  int prot_unwritable;
+  void *p;
   sigset_t emptyset;
 
 #if HAVE_SETRLIMIT && defined RLIMIT_STACK
@@ -109,8 +133,39 @@ main ()
                                      mystack, SIGSTKSZ)
       < 0)
     exit (2);
-  stack_lower_bound = mystack;
-  stack_upper_bound = mystack + SIGSTKSZ - 1;
+
+  /* Preparations.  */
+#if !HAVE_MMAP_ANON && !HAVE_MMAP_ANONYMOUS && HAVE_MMAP_DEVZERO
+  zero_fd = open ("/dev/zero", O_RDONLY, 0644);
+#endif
+
+#if defined __linux__ && defined __sparc__
+  /* On Linux 2.6.26/SPARC64, PROT_READ has the same effect as
+     PROT_READ | PROT_WRITE.  */
+  prot_unwritable = PROT_NONE;
+#else
+  prot_unwritable = PROT_READ;
+#endif
+
+  /* Setup some mmaped memory.  */
+  p = mmap_zeromap ((void *) 0x12340000, 0x4000);
+  if (p == (void *)(-1))
+    {
+      fprintf (stderr, "mmap_zeromap failed.\n");
+      exit (2);
+    }
+  page = (uintptr_t) p;
+
+  /* Make it read-only.  */
+  if (mprotect ((void *) page, 0x4000, prot_unwritable) < 0)
+    {
+      fprintf (stderr, "mprotect failed.\n");
+      exit (2);
+    }
+
+  /* Install the SIGSEGV handler.  */
+  if (sigsegv_install_handler (&sigsegv_handler) < 0)
+    exit (2);
 
   /* Save the current signal mask.  */
   sigemptyset (&emptyset);
@@ -126,6 +181,12 @@ main ()
       recurse (0);
       printf ("no endless recursion?!\n"); exit (1);
     case 2:
+      *(volatile int *) (page + 0x678) = 42;
+      break;
+    case 3:
+      *null_pointer_to_volatile_int = 42;
+      break;
+    case 4:
       break;
     default:
       abort ();

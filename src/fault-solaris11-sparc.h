@@ -1,10 +1,10 @@
 /* Fault handler information.  Solaris 11/SPARC version.
    Copyright (C) 2021  Bruno Haible <bruno@clisp.org>
 
-   This program is free software; you can redistribute it and/or modify
+   This program is free software: you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
-   the Free Software Foundation; either version 2, or (at your option)
-   any later version.
+   the Free Software Foundation; either version 2 of the License, or
+   (at your option) any later version.
 
    This program is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -12,14 +12,14 @@
    GNU General Public License for more details.
 
    You should have received a copy of the GNU General Public License
-   along with this program; if not, write to the Free Software Foundation,
-   Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.  */
+   along with this program.  If not, see <https://www.gnu.org/licenses/>.  */
 
 #include "fault-solaris-sparc.h"
 
 /* On Solaris 11.3/SPARC, both in 32-bit and 64-bit mode, when catching
    stack overflow, the fault address is correct the first time, but is zero
-   or near zero the second time.  'truss tests/stackoverflow1' shows it:
+   or near zero the second time.  'truss tests/test-catch-stackoverflow1'
+   shows it:
 
    In 32-bit mode:
 

@@ -1,14 +1,10 @@
-libsigsegv (2.13.1-1+dde) UNRELEASED; urgency=medium
+libsigsegv (2.14-1) unstable; urgency=medium
 
-  * update
+  * New upstream release
+  * d/copyright: reflect upstream changes
+  * Update standards version to 4.6.0, no changes needed.
 
- -- Debian Common Lisp Team <debian-common-lisp@lists.debian.org>  Tue, 26 Jul 2022 11:07:22 +0800
-
-libsigsegv (2.13.1-1+dde) unstable; urgency=medium
-
-  * add sw64 porting.
-
- -- Zhang FeiLong <zhangfeilong@uniontech.com>  Tue, 12 Apr 2022 17:11:40 +0800
+ -- Sébastien Villemot <sebastien@debian.org>  Fri, 28 Jan 2022 10:49:42 +0100
 
 libsigsegv (2.13-1) unstable; urgency=medium
 
