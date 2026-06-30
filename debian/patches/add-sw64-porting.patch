@@ -1,0 +1,147 @@
+From: Zhang FeiLong <zhangfeilong@uniontech.com>
+Date: Tue, 30 Jun 2026 10:38:18 +0800
+Subject: add-sw64-porting
+
+Origin: uniontech
+Reviewed-By: zhangfeilong@uniontech.com
+Reviewed-By: Tianyu Chen <sweetyfish@deepin.org>
+Last-Update: 2026-06-30
+---
+ configure.ac                | 21 +++++++++++++++++++++
+ src/Makefile.am             |  1 +
+ src/Makefile.in             |  1 +
+ src/fault-linux-sw_64-old.h | 21 +++++++++++++++++++++
+ src/fault-linux-sw_64.h     | 19 +++++++++++++++++++
+ 5 files changed, 63 insertions(+)
+ create mode 100644 src/fault-linux-sw_64-old.h
+ create mode 100644 src/fault-linux-sw_64.h
+
+diff --git a/configure.ac b/configure.ac
+index e87f13b..862847b 100644
+--- a/configure.ac
++++ b/configure.ac
+@@ -218,6 +218,13 @@ SV_TRY_FAULT([OSF/1 Alpha], sv_cv_fault_osf_alpha,
+   [int sig, int code, struct sigcontext *scp],
+   [scp->sc_traparg_a0])
+ 
++dnl FIXME: Put in some more known values into the third argument.
++SV_TRY_FAULT([Linux/sw_64], sv_cv_fault_linux_sw_64,
++  [sw_64*-*-linux2[4-9]* | sw_64*-*-linux2.[4-9]*],
++  [],
++  [int sig, int code, struct sigcontext *scp],
++  [scp->sc_traparg_a0])
++
+ dnl FIXME: Put in some more known values into the third argument.
+ SV_TRY_FAULT([NetBSD Alpha], sv_cv_fault_netbsd_alpha,
+   [alpha*-*-osf[4-9]* | alpha-*-*bsd*],
+@@ -291,6 +298,13 @@ if test -z "$CFG_FAULT" && test "$sv_cv_fault_hpux_hppa" = yes; then
+   esac
+   FAULT_CONTEXT='struct sigcontext'
+ fi
++if test -z "$CFG_FAULT" && test "$sv_cv_fault_linux_sw_64" = yes; then
++  case "$host_cpu" in
++    sw_64*) CFG_FAULT=fault-linux-sw_64.h ;;
++    *) CFG_FAULT=fault-linux.h ;;
++  esac
++  FAULT_CONTEXT='struct sigcontext'
++fi
+ if test -z "$CFG_FAULT" && test "$sv_cv_fault_osf_alpha" = yes; then
+   case "$host_cpu" in
+     alpha*) CFG_FAULT=fault-osf-alpha.h ;;
+@@ -441,6 +455,9 @@ if test -z "$CFG_FAULT" && test "$sv_cv_fault_posix" = yes; then
+             alpha*)
+               CFG_FAULT=fault-linux-alpha.h
+               ;;
++            sw_64*)
++              CFG_FAULT=fault-linux-sw_64.h
++              ;;
+             arm* | strongarm* | xscale* | aarch64*)
+               CFG_FAULT=fault-linux-arm.h
+               ;;
+@@ -634,6 +651,10 @@ else
+           CFG_FAULT=fault-linux-alpha-old.h
+           FAULT_CONTEXT='struct sigcontext'
+           ;;
++        sw_64*)
++          CFG_FAULT=fault-linux-sw_64-old.h
++          FAULT_CONTEXT='struct sigcontext'
++          ;;
+         arm* | strongarm* | xscale*)
+           CFG_FAULT=fault-linux-arm-old.h
+           FAULT_CONTEXT='struct sigcontext'
+diff --git a/src/Makefile.am b/src/Makefile.am
+index 447076f..f857165 100644
+--- a/src/Makefile.am
++++ b/src/Makefile.am
+@@ -34,6 +34,7 @@ noinst_HEADERS = \
+   fault-hurd.h fault-hurd-i386.h \
+   fault-irix.h fault-irix-mips.h \
+   fault-linux.h fault-linux-alpha.h fault-linux-alpha-old.h \
++  fault-linux-sw_64.h fault-linux-sw_64-old.h \
+   fault-linux-arm.h fault-linux-arm-old.h \
+   fault-linux-cris.h fault-linux-cris-old.h \
+   fault-linux-hppa.h fault-linux-hppa-old.h \
+diff --git a/src/Makefile.in b/src/Makefile.in
+index ed43e0f..abbce4d 100644
+--- a/src/Makefile.in
++++ b/src/Makefile.in
+@@ -352,6 +352,7 @@ noinst_HEADERS = \
+   fault-hurd.h fault-hurd-i386.h \
+   fault-irix.h fault-irix-mips.h \
+   fault-linux.h fault-linux-alpha.h fault-linux-alpha-old.h \
++  fault-linux-sw_64.h fault-linux-sw_64-old.h \
+   fault-linux-arm.h fault-linux-arm-old.h \
+   fault-linux-cris.h fault-linux-cris-old.h \
+   fault-linux-hppa.h fault-linux-hppa-old.h \
+diff --git a/src/fault-linux-sw_64-old.h b/src/fault-linux-sw_64-old.h
+new file mode 100644
+index 0000000..5f5631a
+--- /dev/null
++++ b/src/fault-linux-sw_64-old.h
+@@ -0,0 +1,21 @@
++/* Fault handler information.  Linux/sw_64 version.
++   Copyright (C) 2002  Bruno Haible <bruno@clisp.org>
++
++   This program is free software: you can redistribute it and/or modify
++   it under the terms of the GNU General Public License as published by
++   the Free Software Foundation; either version 2 of the License, or
++   (at your option) any later version.
++
++   This program is distributed in the hope that it will be useful,
++   but WITHOUT ANY WARRANTY; without even the implied warranty of
++   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++   GNU General Public License for more details.
++
++   You should have received a copy of the GNU General Public License
++   along with this program.  If not, see <https://www.gnu.org/licenses/>.  */
++
++#include <asm/sigcontext.h>
++
++#define SIGSEGV_FAULT_HANDLER_ARGLIST  int sig, int code, struct sigcontext *scp
++#define SIGSEGV_FAULT_CONTEXT  scp
++#define SIGSEGV_FAULT_STACKPOINTER  scp->sc_regs[30]
+diff --git a/src/fault-linux-sw_64.h b/src/fault-linux-sw_64.h
+new file mode 100644
+index 0000000..6d5b5c7
+--- /dev/null
++++ b/src/fault-linux-sw_64.h
+@@ -0,0 +1,19 @@
++/* Fault handler information.  Linux/sw_64 version when it supports POSIX.
++   Copyright (C) 2002, 2009  Bruno Haible <bruno@clisp.org>
++
++   This program is free software: you can redistribute it and/or modify
++   it under the terms of the GNU General Public License as published by
++   the Free Software Foundation; either version 2 of the License, or
++   (at your option) any later version.
++
++   This program is distributed in the hope that it will be useful,
++   but WITHOUT ANY WARRANTY; without even the implied warranty of
++   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++   GNU General Public License for more details.
++
++   You should have received a copy of the GNU General Public License
++   along with this program.  If not, see <https://www.gnu.org/licenses/>.  */
++
++#include "fault-posix-ucontext.h"
++
++#define SIGSEGV_FAULT_STACKPOINTER  ((ucontext_t *) ucp)->uc_mcontext.sc_regs[30]
